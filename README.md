@@ -1,1 +1,1 @@
-# Folder-Synchronizer
+# Folder Synchronizer
