@@ -4,7 +4,6 @@ import shutil
 import hashlib
 import time
 import sys
-import termios
 import signal
 from logger import Logger
 
