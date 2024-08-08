@@ -1,4 +1,4 @@
-# Folder Synchronization Project
+# Folder Synchronization (One Way) Project
 
 A Python application for synchronizing the contents of a source directory to a backup directory.
 
