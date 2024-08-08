@@ -32,7 +32,7 @@ This project is a Python application designed to synchronize the contents of a s
 
 ### **Run the Script**:
    ```bash
-   python3 your_script_name.py <source_directory> <backup_directory> [--interval <seconds>] [--log <log_file>]
+   python3 main.py <source_directory> <backup_directory> [--interval <seconds>] [--log <log_file>]
    ```
 Replace `source_directory` and `backup_directory` with your actual directory paths. Optionally, specify synchronization interval and log file path. Please take into account that the backup directory is where the program will store the <source_backup> folder. You cannot place the backup inside the source directory - or any of it's subdirectories - to avoid a recursive loop of nested backups, which can lead to severe system instability including potential hardware crashes or significant performance degradation.
 
