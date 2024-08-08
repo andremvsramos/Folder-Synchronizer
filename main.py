@@ -11,7 +11,7 @@ logger = None
 counter = 0
 
 # Handles Ctrl+C input to exit the program
-def signal_handler():
+def signal_handler(signum, param):
 	logger.info(f"Total number of operations: {counter}\n\n\n")
 	sys.exit(0)
 
