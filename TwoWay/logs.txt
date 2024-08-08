@@ -1,0 +1,18 @@
+[2024-08-08 18:56:44,287 - logger - INFO] - Source found: "test_folder"
+[2024-08-08 18:56:44,288 - logger - INFO] - Backup found: "."
+[2024-08-08 18:56:44,288 - logger - INFO] - Synching...
+[2024-08-08 18:56:44,291 - logger - INFO] - Created backup directory: .
+[2024-08-08 18:56:44,296 - logger - INFO] - Created backup directory: subdir 1
+[2024-08-08 18:56:44,319 - logger - INFO] - Created backup of subfile 1
+[2024-08-08 18:56:44,327 - logger - INFO] - Created backup directory: subsubdir
+[2024-08-08 18:56:44,357 - logger - INFO] - Created backup of subsubfile 2
+[2024-08-08 18:56:44,363 - logger - INFO] - Created backup directory: subdir 2
+[2024-08-08 18:56:44,387 - logger - INFO] - Created backup of subfile 2
+[2024-08-08 18:56:59,576 - logger - INFO] - Created backup of asd
+[2024-08-08 18:57:04,677 - logger - INFO] - Removed: asd
+[2024-08-08 18:57:09,706 - logger - INFO] - Created backup of asd
+[2024-08-08 18:57:14,813 - logger - INFO] - Removed: asd
+[2024-08-08 18:57:16,344 - logger - INFO] - Total number of operations: 11
+
+
+
