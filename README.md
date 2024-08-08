@@ -6,12 +6,11 @@ A Python application for synchronizing the contents of a source directory to a b
 2. [Features](#features)
 3. [Notes](#notes)
 4. [Usage](#usage)
-5. [Running the Application](#running-the-application)
    - [Running the Script](#running-the-script)
    - [Checking Logs](#checking-logs)
    - [Stopping the Application](#stopping-the-application)
    - [Debugging](#debugging)
-6. [License](#license)
+5. [License](#license)
 
 ## Overview
 
