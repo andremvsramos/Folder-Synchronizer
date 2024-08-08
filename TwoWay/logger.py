@@ -3,7 +3,6 @@ import json
 import os
 from datetime import datetime
 from synchronizer import FolderSynchronizer
-from threading import Lock
 
 class Logger:
 
@@ -16,8 +15,23 @@ class Logger:
 		self.file_handler = None
 		self.console_handler = None
 		self.format = logging.Formatter('[%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
-		self.metadata_lock = Lock()
 		self.setup()
+
+	def get_log_file(self):
+		return self.log_file
+
+	def get_logger(self):
+		return self.logger
+
+	def get_file_handler(self):
+		return self.file_handler
+
+	def get_console_handler(self):
+		return self.console_handler
+
+	def get_format(self):
+		return self.format
+
 
 	def setup(self):
 
@@ -40,8 +54,6 @@ class Logger:
 		self.logger.addHandler(self.file_handler)
 		self.logger.addHandler(self.console_handler)
 
-	def get_logger(self):
-		return self.logger
 
 	def log_metadata(self, file_path, change_type, root):
 		logger = self.get_logger()
@@ -57,12 +69,11 @@ class Logger:
 
 	def write_metadata(self, log_entry):
 		metadata_file = "updates.json"
-		with self.metadata_lock:
-			if os.path.exists(metadata_file):
-				with open(metadata_file, 'r') as f:
-					data = json.load(f)
-			else:
-				data = []
-			data.append(log_entry)
-			with open(metadata_file, 'w') as f:
-				json.dump(data, f, indent=4)
+		if os.path.exists(metadata_file):
+			with open(metadata_file, 'r') as f:
+				data = json.load(f)
+		else:
+			data = []
+		data.append(log_entry)
+		with open(metadata_file, 'w') as f:
+			json.dump(data, f, indent=4)

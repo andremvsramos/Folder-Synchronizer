@@ -17,7 +17,25 @@ class FolderSynchronizer:
 		self.backup = backup
 		self.timer = timer
 		self.counter = 0
-		self.metadata = {}
+
+	def get_logger(self):
+		return self.logger
+
+	def get_json_logger(self):
+		return self.log
+
+	def get_source(self):
+		return self.source
+
+	def get_backup(self):
+		return self.backup
+
+	def get_timer(self):
+		return self.timer
+
+	def get_counter(self):
+		return self.counter
+
 
 	def sync_by_source(self):
 		file = self.source

@@ -13,6 +13,21 @@ class Logger:
 		self.format = logging.Formatter('[%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
 		self.setup()
 
+	def get_log_file(self):
+		return self.log_file
+
+	def get_logger(self):
+		return self.logger
+
+	def get_file_handler(self):
+		return self.file_handler
+
+	def get_console_handler(self):
+		return self.console_handler
+
+	def get_format(self):
+		return self.format
+
 	def setup(self):
 
 		# Set log level
@@ -33,6 +48,3 @@ class Logger:
 		# Make logger use both handlers
 		self.logger.addHandler(self.file_handler)
 		self.logger.addHandler(self.console_handler)
-
-	def get_logger(self):
-		return self.logger
