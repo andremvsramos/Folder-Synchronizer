@@ -46,7 +46,6 @@ def is_subdirectory_of_source(source, backup):
 	return common_path == source
 
 
-
 def manage_versioned_backups(directory, incoming):
 	original = os.path.join(directory, "_0")
 	current = os.path.join(directory, "_1")
@@ -166,7 +165,7 @@ def main():
 	parser.add_argument('source', type=str, help='Path to the source directory that will be backed up and synchronized')
 	parser.add_argument('backup', type=str, help='Path to the destination directory where the backup will be stored')
 	parser.add_argument('-i', '--interval', type=int, default=3600, help='Synchronization interval in seconds (default: 3600)')
-	parser.add_argument('-l', '--log', type=str, default="synchro.log", help='Path to the log file (default: synchro.log)')
+	parser.add_argument('-l', '--log', type=str, default="oneway.log", help='Path to the log file (default: synchro.log)')
 	parser.add_argument('-v', '--versioned-backup', action='store_true', help='Create versioned backup')
 	args = parser.parse_args()
 

@@ -57,7 +57,7 @@ def main():
 	parser.add_argument('--restore', action="store_true", help="Restore the selected directory to it's previous state")
 	parser.add_argument('--version', type=str, choices=['latest', 'previous'], default='none', help="Specify which version to restore (latest or previous)")
 	parser.add_argument('--interval', type=int, default=3600, help='Synchronization interval in seconds (default: 3600)')
-	parser.add_argument('--log', type=str, default="synchro.log", help='Path to the log file (default: synchro.log)')
+	parser.add_argument('--log', type=str, default="twoway.log", help='Path to the log file (default: synchro.log)')
 	parser.add_argument('--config', type=str, default="config.json", help="Path to the recovery system configuration file")
 	args = parser.parse_args()
 
@@ -70,6 +70,7 @@ def main():
 	config = args.config
 	restore_manager = RestoreSystem(source, logger, config=config)
 	version = args.version
+
 	if args.restore:
 		if args.backup:
 			logger.get_logger().error("The --restore option requires only one directory argument.")
