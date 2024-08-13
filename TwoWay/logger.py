@@ -14,7 +14,7 @@ class Logger:
 				self.logger.removeHandler(handler)
 		self.file_handler = None
 		self.console_handler = None
-		self.format = logging.Formatter('[%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
+		self.format = logging.Formatter('[TWOWAY][%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
 		self.setup()
 
 	def get_log_file(self):

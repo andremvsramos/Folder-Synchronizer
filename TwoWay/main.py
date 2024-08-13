@@ -3,8 +3,10 @@ import argparse
 import sys
 import signal
 import time
+import subprocess
 from logger import Logger
 from synchronizer import FolderSynchronizer
+from recovery import RestoreSystem
 
 logger = None
 sync = None
@@ -51,9 +53,12 @@ def main():
 	# Read from CLI
 	parser = argparse.ArgumentParser()
 	parser.add_argument('source', type=str, help='Path to the source directory that will be backed up and synchronized')
-	parser.add_argument('backup', type=str, help='Path to the destination directory where the backup will be stored')
+	parser.add_argument('backup', type=str, nargs='?', help='Path to the destination directory where the backup will be stored')
+	parser.add_argument('--restore', action="store_true", help="Restore the selected directory to it's previous state")
+	parser.add_argument('--version', type=str, choices=['latest', 'previous'], default='none', help="Specify which version to restore (latest or previous)")
 	parser.add_argument('--interval', type=int, default=3600, help='Synchronization interval in seconds (default: 3600)')
 	parser.add_argument('--log', type=str, default="synchro.log", help='Path to the log file (default: synchro.log)')
+	parser.add_argument('--config', type=str, default="config.json", help="Path to the recovery system configuration file")
 	args = parser.parse_args()
 
 	clear_terminal()
@@ -62,26 +67,56 @@ def main():
 	backup = args.backup
 	timer = args.interval
 	logger = Logger(args.log)
+	config = args.config
+	restore_manager = RestoreSystem(source, logger, config=config)
+	version = args.version
+	if args.restore:
+		if args.backup:
+			logger.get_logger().error("The --restore option requires only one directory argument.")
+			sys.exit(1)
 
-	# Check if paths exist
-	source_exists = does_path_exist(source, "source")
-	backup_exists = does_path_exist(backup, "backup")
+		if version == 'none':
+			version = 'latest'
+		path_to_restore = os.path.abspath(args.source)
+		print(path_to_restore)
+		recorded_path = restore_manager.get_recorded_path(path_to_restore)
+		print(recorded_path)
+		if recorded_path:
+			if not os.path.exists(recorded_path):
+				os.makedirs(recorded_path)
+			restore_manager.restore_version(recorded_path, version=version)
+			logger.get_logger().info(f"Restored from backup to {recorded_path}")
 
-	if not source_exists or not backup_exists:
-		logger.get_logger().error("Folders aren't valid")
+	elif not args.backup:
+		logger.get_logger().error("The program requires a backup directory.")
 		sys.exit(1)
 
-	sync = FolderSynchronizer(logger, source, backup, timer)
+	elif args.version != 'none':
+			logger.get_logger().error("Version option not supported for normal use")
+			sys.exit(1)
 
-	if is_subdirectory_of_source(source, backup):
-		logger.get_logger().error("The backup folder is inside the source folder or its subdirectories.")
-		sys.exit(1)
 	else:
-		# Create the backup first
-		logger.get_logger().info("Synching...")
-		sync.sync_by_source()
+		# Check if paths exist
+		source_exists = does_path_exist(source, "source")
+		backup_exists = does_path_exist(backup, "backup")
 
-	sync.run()
+		if not source_exists or not backup_exists:
+			logger.get_logger().error("Folders aren't valid")
+			sys.exit(1)
+
+		sync = FolderSynchronizer(logger, source, backup, timer)
+
+
+		if is_subdirectory_of_source(source, backup):
+			logger.get_logger().error("The backup folder is inside the source folder or its subdirectories.")
+			sys.exit(1)
+		else:
+			# Create the backup first
+			logger.get_logger().info("Synching...")
+			sync.sync_by_source()
+
+		restore_manager.run_versioned_backups()
+		sync.run()
 
 if __name__ == "__main__":
 	main()
