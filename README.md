@@ -153,7 +153,7 @@ To use the recovery system from the CLI:
 
 - **To restore the latest version of a directory**:
   ```bash
-  python3 main.py <directory_to_recover> --restore --version latest
+  python3 main.py <directory_to_recover> --restore [--version latest]
   ```
 
 - **To restore a previous version of a directory:**
