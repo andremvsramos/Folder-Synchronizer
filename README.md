@@ -144,7 +144,7 @@ Here’s an example of what the `config.json` might look like:
     "interval": ["--interval", "60"]
 }
 ```
-- `script`: Path to the script that manages the versioning. By default, it points to the `OneWay/main.py` script. Only change this if you move the `OneWay` directory.
+- `script`: Path to the script that manages the versioning. It needs to point to the `OneWay/main.py` script. Only change this if you move the `OneWay` directory.
 - `interval`: Synchronization interval in seconds. For demonstration purposes, the default configuration sets this to 60 seconds.
 
 #### Using the Recovery System

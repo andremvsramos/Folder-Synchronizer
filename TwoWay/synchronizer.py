@@ -36,7 +36,6 @@ class FolderSynchronizer:
 	def get_counter(self):
 		return self.counter
 
-
 	def sync_by_source(self):
 		file = self.source
 		self.sync_directories(file, self.backup, origin=ORIGIN[1])
