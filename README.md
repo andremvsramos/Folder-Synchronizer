@@ -52,7 +52,7 @@ Additionally, to maintain the versioned-backup mode effectively, the system occa
 
 - **Running One-Way Program in Versioned Backup Mode**: The One-Way synchronization program can be run with versioned backup mode activated. This mode will create version directories and maintain different versions of the source and backup directories, as described in the Two-Way version.
 
-- **One-Way with Versioned Backup Mode**: When activated, the One-Way version will create a `__versions__` directory. For each synchronized directory (source and backup), it maintains two versions: `_0` (previous) and `_1` (latest). When synchronizing, if the incoming file's MD5 hash differs from `_1`, the current `_1` is renamed to `_0`, and the incoming file becomes the new `_1`. The program also calculates the MD5 hash of the entire directory by considering the checksums of all files and their relative paths. This combined approach ensures that both individual file changes and overall directory state are accurately tracked and versioned.
+- **One-Way with Versioned Backup Mode**: When activated, the One-Way version will create a `__versions__` directory. For each synchronized directory (source and backup), it maintains two versions: `_0` (previous) and `_1` (latest). When synchronizing, if the incoming file's MD5 hash differs from `_1`, the current `_1` is copied to `_0`, and the incoming sync becomes the new `_1`. The program also calculates the MD5 hash of the entire directory by considering the checksums of all files and their relative paths. This combined approach ensures that both individual file changes and overall directory state are accurately tracked and versioned.
 
 ### File Checksum Calculation
 
