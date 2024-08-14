@@ -5,13 +5,17 @@ A Python application for synchronizing the contents of a source directory with a
 1. [Overview](#overview)
 2. [Versions](#versions)
 3. [Features](#features)
-4. [Notes](#notes)
+4. [MD5](#md5)
+   - [File Checksum Calculation](#file-checksum-calculation)
+   - [Directory Checksum Calculation](#directory-checksum-calculation)
 5. [Usage](#usage)
    - [Running the Script](#running-the-script)
    - [Checking Logs](#checking-logs)
    - [Stopping the Application](#stopping-the-application)
    - [Debugging](#debugging)
    - [Recovery System (Two-Way Version Only)](#recovery-system-two-way-version-only)
+     - [Configuration](#configuration)
+     - [Using the Recovery System](#using-the-recovery-system)
 6. [License](#license)
 
 ## Overview
@@ -39,12 +43,52 @@ Each version can be run independently from its respective folder:
   - **Version Tracking**: Maintains the latest and previous versions of the source and backup directories.
   - **Restoration**: Allows restoration of directories to previous states.
 
-## Notes
+## MD5
 
-- Ensure that the source and backup directories are valid and not subdirectories of each other.
-- The log file will be created and updated automatically.
-- **One-Way Version**: Synchronization is one-directional from the source to the backup directory.
-- **Two-Way Version**: Synchronization is bi-directional, keeping both the source and backup directories in sync. Additionally, the recovery system provides version tracking and restoration capabilities.
+- **MD5 Check**: The system uses MD5 hashing to determine if the contents of files have changed. MD5 (Message Digest Algorithm 5) generates a 128-bit hash value that uniquely represents the contents of a file. If the MD5 hash of a file changes, it indicates that the file contents have been modified, prompting the synchronization process to update the backup.
+Additionally, to maintain the versioned-backup mode effectively, the system occasionally computes the MD5 hash of the entire directory. This ensures that even if changes occur across multiple files, the integrity and versioning of the entire directory are accurately tracked and managed.
+
+- **One-Way Synchronization**: By itself, the One-Way synchronization is a straightforward process that syncs files from the source directory to the backup directory. It does not track historical versions of files.
+
+- **Running One-Way Program in Versioned Backup Mode**: The One-Way synchronization program can be run with versioned backup mode activated. This mode will create version directories and maintain different versions of the source and backup directories, as described in the Two-Way version.
+
+- **One-Way with Versioned Backup Mode**: When activated, the One-Way version will create a `__versions__` directory. For each synchronized directory (source and backup), it maintains two versions: `_0` (previous) and `_1` (latest). When synchronizing, if the incoming file's MD5 hash differs from `_1`, the current `_1` is renamed to `_0`, and the incoming file becomes the new `_1`. The program also calculates the MD5 hash of the entire directory by considering the checksums of all files and their relative paths. This combined approach ensures that both individual file changes and overall directory state are accurately tracked and versioned.
+
+### File Checksum Calculation
+
+To calculate the MD5 hash of a file, the following function is used:
+
+```python
+import hashlib
+
+def file_checksum(file):
+    file_hash = hashlib.md5()
+    with open(file, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
+```
+- **Explanation**: The `file_checksum` function calculates the MD5 hash of a file by reading it in chunks and updating the hash with each chunk. The resulting hash uniquely represents the file contents and is used to determine if the file has changed.
+
+### Directory Checksum Calculation
+
+To calculate the MD5 hash of an entire directory, the following function is used:
+
+```python
+import os
+import hashlib
+
+def directory_checksum(directory):
+    hasher = hashlib.md5()
+    for root, _, files in os.walk(directory):
+        for file in sorted(files):
+            file_path = os.path.join(root, file)
+            relative_path = os.path.relpath(file_path, directory)
+            hasher.update(relative_path.encode())
+            hasher.update(file_checksum(file_path).encode())
+    return hasher.hexdigest()
+```
+- **Explanation**: The `directory_checksum` function calculates the MD5 hash of a directory by iterating over all files within the directory and updating the hash with both the file's checksum and its relative path. This is due to the limitation of the hashing algorithm, which does not have the capability to directly compute a checksum for an entire directory. This combined hash provides a unique representation of the directory's state and is used to ensure that changes across the entire directory are tracked accurately.
 
 ## Usage
 
@@ -84,17 +128,40 @@ When restoring:
 - The JSON file `.info.json` records folder locations for recovery.
 - If the target directory is deleted, the system checks if the path exists in the JSON and restores it from the appropriate backup version.
 
+#### Configuration
+
+The recovery system uses a `config.json` file to configure certain settings, such as the script path and synchronization interval.
+
+- **If no `config.json` file is provided**, the program will automatically generate one with default settings. These defaults include a script path pointing to the One-Way program (`../OneWay/main.py`) and a synchronization interval of 60 seconds.
+
+- **If you wish to customize the recovery behavior**, you can create and provide your own `config.json` file. You can specify a different script path and synchronization interval according to your needs. **You'll only need to change the `script` if you move the OneWay directory to a different location.**
+
+Here’s an example of what the `config.json` might look like:
+
+```json
+{
+    "script": "../OneWay/main.py",
+    "interval": ["--interval", "60"]
+}
+```
+- `script`: Path to the script that manages the versioning. By default, it points to the `OneWay/main.py` script. Only change this if you move the `OneWay` directory.
+- `interval`: Synchronization interval in seconds. For demonstration purposes, the default configuration sets this to 60 seconds.
+
+#### Using the Recovery System
+
 To use the recovery system from the CLI:
 
 - **To restore the latest version of a directory**:
   ```bash
-  python3 main.py <source_directory> <backup_directory> --restore --version latest
+  python3 main.py <directory_to_recover> --restore --version latest
   ```
 
-- **To restore a previous version of a directory**:
+- **To restore a previous version of a directory:**
   ```bash
-  python3 main.py <directory_to_recover> --restore [--interval [<latest>/<previous>]]
+  python3 main.py <directory_to_recover> --restore --version previous
   ```
+
+Replace `directory_to_recover` with the path to the directory you want to restore. By default, the system restores the **latest** version of the directory. The `--version previous` flag refers to the version immediately before the latest one.
 
 ## License
 

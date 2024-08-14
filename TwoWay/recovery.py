@@ -9,7 +9,7 @@ class RestoreSystem:
 
 	DEFAULT = {
 		"script": "../OneWay/main.py",
-		"flags": ["--interval", "5", "--versioned-backup"],
+		"interval": ["--interval", "60"],
 	}
 
 	def __init__(self, origin, logger, config="config.json"):
@@ -27,10 +27,11 @@ class RestoreSystem:
 		self.versions_backup_previous = f"./__versions__/{self.origin}_backup/_0"
 		self.source_logs = ["--log", f"./__versions__/{self.origin}/versionlogs.log"]
 		self.backup_logs = ["--log", f"./__versions__/{self.origin}_backup/versionlogs.log"]
+		self.version_flag = ["--versioned-backup"]
 		#DEFAULT
 		self.config = config
 		self.script = self.DEFAULT["script"]
-		self.flags = self.DEFAULT["flags"]
+		self.interval = self.DEFAULT["interval"]
 		self.restore_source_process = None
 		self.restore_backup_process = None
 		#LOAD CONFIG
@@ -56,7 +57,7 @@ class RestoreSystem:
 			config = json.load(f)
 
 		self.script = config.get("script", self.DEFAULT["script"])
-		self.flags = config.get("flags", self.DEFAULT["flags"])
+		self.interval = config.get("interval", self.DEFAULT["interval"])
 
 	def record_paths(self):
 		data = {}
@@ -89,11 +90,11 @@ class RestoreSystem:
 			os.makedirs(self.versions_source)
 		if not os.path.exists(self.versions_backup):
 			os.makedirs(self.versions_backup)
-		command = [self.compiler, self.script, self.origin, self.versions_source] + self.flags + self.source_logs
+		command = [self.compiler, self.script, self.origin, self.versions_source, self.version_flag] + self.interval + self.source_logs
 		self.log.info(f"Running versioned backup: {command}")
 		global source_process
 		source_process = subprocess.Popen(command)
-		command = [self.compiler, self.script, self.origin, self.versions_backup] + self.flags + self.backup_logs
+		command = [self.compiler, self.script, self.origin, self.versions_backup, self.version_flag] + self.interval + self.backup_logs
 		self.log.info(f"Running versioned backup: {command}")
 		global backup_process
 		backup_process = subprocess.Popen(command)
