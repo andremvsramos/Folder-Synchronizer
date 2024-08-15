@@ -75,12 +75,15 @@ class RestoreSystem:
 			json.dump(data, f, indent=4, ensure_ascii=False)
 
 	def get_recorded_path(self, path):
-		if os.path.exists(self.info_file):
-			with open(self.info_file, 'r', encoding='utf-8') as f:
-				data = json.load(f)
-				for key, value in data.items():
-					if value == path:
-						return key
+		if not os.path.exists(self.info_file):
+			return None
+
+		with open(self.info_file, 'r', encoding='utf-8') as f:
+			data = json.load(f)
+
+		for key, value in data.items():
+			if value == path:
+				return key
 		return None
 
 	def run_versioned_backups(self):

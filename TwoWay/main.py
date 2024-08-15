@@ -14,7 +14,7 @@ restore_manager = None
 
 # Handles Ctrl+C input to exit the program
 def signal_handler(signum, param):
-	logger.get_logger().info(f"Total number of operations: {sync.counter}\n\n\n")
+	logger.get_logger().info(f"Total number of operations: {sync.counter if sync else 'N/A'}\n\n\n")
 	if restore_manager:
 		restore_manager.cleanup()
 	sys.exit(0)
@@ -48,12 +48,7 @@ def is_subdirectory_of_source(source, backup):
 	common_path = os.path.commonpath([source, backup])
 	return common_path == source
 
-def main():
-	global logger
-	global sync
-	global restore_manager
-	signal.signal(signal.SIGINT, signal_handler)
-
+def parse_arguments():
 	# Read from CLI
 	parser = argparse.ArgumentParser()
 	parser.add_argument('source', type=str, help='Path to the source directory that will be backed up and synchronized')
@@ -63,36 +58,62 @@ def main():
 	parser.add_argument('--interval', type=int, default=3600, help='Synchronization interval in seconds (default: 3600)')
 	parser.add_argument('--log', type=str, default="twoway.log", help='Path to the log file (default: synchro.log)')
 	parser.add_argument('--config', type=str, default="config.json", help="Path to the recovery system configuration file")
-	args = parser.parse_args()
+	return parser.parse_args()
+
+def handle_sync(args):
+	global sync
+	source_exists = does_path_exist(args.source, "source")
+	backup_exists = does_path_exist(args.backup, "backup")
+
+	if not source_exists or not backup_exists:
+		logger.get_logger().error("Folders aren't valid")
+		sys.exit(1)
+
+	if is_subdirectory_of_source(args.source, args.backup):
+		logger.get_logger().error("The backup folder is inside the source folder or its subdirectories.")
+		sys.exit(1)
+
+	# Create the backup first
+	logger.get_logger().info("Synching...")
+	sync = FolderSynchronizer(logger, args.source, args.backup, args.interval)
+	sync.sync_by_source()
+
+	restore_manager.run_versioned_backups()
+	sync.run()
+
+def handle_restore(args, version):
+	if args.backup:
+		logger.get_logger().error("The --restore option requires only one directory argument.")
+		sys.exit(1)
+
+	# If user didn't define version in recovery mode
+	# We don't set the arg latest by default to not allow the user to use version option on non-recovery mode
+	if version == 'none':
+		version = 'latest'
+
+	path_to_restore = os.path.abspath(args.source)
+	recorded_path = restore_manager.get_recorded_path(path_to_restore)
+
+	if recorded_path:
+		if not os.path.exists(recorded_path):
+			os.makedirs(recorded_path)
+		restore_manager.restore_version(recorded_path, version=version)
+		logger.get_logger().info(f"Restored from backup to {recorded_path}")
+
+def main():
+	global logger
+	global restore_manager
+	signal.signal(signal.SIGINT, signal_handler)
+
+	args = parse_arguments()
 
 	clear_terminal()
 
-	source = args.source
-	backup = args.backup
-	timer = args.interval
 	logger = Logger(args.log)
-	config = args.config
-	restore_manager = RestoreSystem(source, logger, config=config)
-	version = args.version
+	restore_manager = RestoreSystem(args.source, logger, config=args.config)
 
 	if args.restore:
-		if args.backup:
-			logger.get_logger().error("The --restore option requires only one directory argument.")
-			sys.exit(1)
-
-		# If user didn't define version in recovery mode
-		# We don't set the arg latest by default to not allow the user to use version option on non-recovery mode
-		if version == 'none':
-			version = 'latest'
-
-		path_to_restore = os.path.abspath(args.source)
-		recorded_path = restore_manager.get_recorded_path(path_to_restore)
-
-		if recorded_path:
-			if not os.path.exists(recorded_path):
-				os.makedirs(recorded_path)
-			restore_manager.restore_version(recorded_path, version=version)
-			logger.get_logger().info(f"Restored from backup to {recorded_path}")
+		handle_restore(args, args.version)
 
 	elif not args.backup:
 		logger.get_logger().error("The program requires a backup directory.")
@@ -104,27 +125,7 @@ def main():
 		sys.exit(1)
 
 	else:
-		# Check if paths exist
-		source_exists = does_path_exist(source, "source")
-		backup_exists = does_path_exist(backup, "backup")
-
-		if not source_exists or not backup_exists:
-			logger.get_logger().error("Folders aren't valid")
-			sys.exit(1)
-
-		sync = FolderSynchronizer(logger, source, backup, timer)
-
-
-		if is_subdirectory_of_source(source, backup):
-			logger.get_logger().error("The backup folder is inside the source folder or its subdirectories.")
-			sys.exit(1)
-		else:
-			# Create the backup first
-			logger.get_logger().info("Synching...")
-			sync.sync_by_source()
-
-		restore_manager.run_versioned_backups()
-		sync.run()
+		handle_sync(args)
 
 if __name__ == "__main__":
 	main()
