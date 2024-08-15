@@ -10,10 +10,13 @@ from recovery import RestoreSystem
 
 logger = None
 sync = None
+restore_manager = None
 
 # Handles Ctrl+C input to exit the program
 def signal_handler(signum, param):
 	logger.get_logger().info(f"Total number of operations: {sync.counter}\n\n\n")
+	if restore_manager:
+		restore_manager.cleanup()
 	sys.exit(0)
 
 # Simply clears the terminal on startup -- checks the if the system is UNIX-based or Windows
@@ -48,6 +51,7 @@ def is_subdirectory_of_source(source, backup):
 def main():
 	global logger
 	global sync
+	global restore_manager
 	signal.signal(signal.SIGINT, signal_handler)
 
 	# Read from CLI
@@ -76,12 +80,14 @@ def main():
 			logger.get_logger().error("The --restore option requires only one directory argument.")
 			sys.exit(1)
 
+		# If user didn't define version in recovery mode
+		# We don't set the arg latest by default to not allow the user to use version option on non-recovery mode
 		if version == 'none':
 			version = 'latest'
+
 		path_to_restore = os.path.abspath(args.source)
-		print(path_to_restore)
 		recorded_path = restore_manager.get_recorded_path(path_to_restore)
-		print(recorded_path)
+
 		if recorded_path:
 			if not os.path.exists(recorded_path):
 				os.makedirs(recorded_path)
@@ -92,9 +98,10 @@ def main():
 		logger.get_logger().error("The program requires a backup directory.")
 		sys.exit(1)
 
+	# If user used version option in non-recovery mode
 	elif args.version != 'none':
-			logger.get_logger().error("Version option not supported for normal use")
-			sys.exit(1)
+		logger.get_logger().error("Version option not supported for normal use")
+		sys.exit(1)
 
 	else:
 		# Check if paths exist

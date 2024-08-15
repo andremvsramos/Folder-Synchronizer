@@ -27,7 +27,7 @@ class RestoreSystem:
 		self.versions_backup_previous = f"./__versions__/{self.origin}_backup/_0"
 		self.source_logs = ["--log", f"./__versions__/{self.origin}/versionlogs.log"]
 		self.backup_logs = ["--log", f"./__versions__/{self.origin}_backup/versionlogs.log"]
-		self.version_flag = ["--versioned-backup"]
+		self.version_flag = "--versioned-backup"
 		#DEFAULT
 		self.config = config
 		self.script = self.DEFAULT["script"]
@@ -90,14 +90,14 @@ class RestoreSystem:
 			os.makedirs(self.versions_source)
 		if not os.path.exists(self.versions_backup):
 			os.makedirs(self.versions_backup)
+
 		command = [self.compiler, self.script, self.origin, self.versions_source, self.version_flag] + self.interval + self.source_logs
 		self.log.info(f"Running versioned backup: {command}")
-		global source_process
-		source_process = subprocess.Popen(command)
+		self.restore_source_process = subprocess.Popen(command)
+
 		command = [self.compiler, self.script, self.origin, self.versions_backup, self.version_flag] + self.interval + self.backup_logs
 		self.log.info(f"Running versioned backup: {command}")
-		global backup_process
-		backup_process = subprocess.Popen(command)
+		self.restore_backup_process = subprocess.Popen(command)
 
 	def get_backup_path(self, version, type):
 		if type == 'source':
@@ -134,3 +134,18 @@ class RestoreSystem:
 
 		#os.makedirs(target)
 		shutil.copytree(backup_path, target)
+
+	def cleanup(self):
+		if self.restore_source_process and self.restore_source_process.poll() is None:
+			self.restore_source_process.terminate()
+			try:
+				self.restore_source_process.wait(timeout=5)
+			except subprocess.TimeoutExpired:
+				self.restore_source_process.kill()
+
+		if self.restore_backup_process and self.restore_backup_process.poll() is None:
+			self.restore_backup_process.terminate()
+			try:
+				self.restore_backup_process.wait(timeout=5)
+			except subprocess.TimeoutExpired:
+				self.restore_backup_process.kill()
