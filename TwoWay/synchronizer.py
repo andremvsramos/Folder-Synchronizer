@@ -51,7 +51,7 @@ class FolderSynchronizer:
 	# We use the has as checksum, or 'key', that'll be used to compare the backup to the source file.
 	# If the hash has changed, then it means we need we need to re-sync it on the next time interval.
 	def file_checksum(self, file):
-		file_hash = hashlib.md5()
+		file_hash = hashlib.sha256()
 		with open(file, "rb") as f:
 			for chunk in iter(lambda: f.read(4096), b""):
 				file_hash.update(chunk)
