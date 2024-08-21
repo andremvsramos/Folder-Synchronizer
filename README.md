@@ -5,7 +5,7 @@ A Python application for synchronizing the contents of a source directory with a
 1. [Overview](#overview)
 2. [Versions](#versions)
 3. [Features](#features)
-4. [MD5](#md5)
+4. [SHA-256](#sha-256)
    - [File Checksum Calculation](#file-checksum-calculation)
    - [Directory Checksum Calculation](#directory-checksum-calculation)
 5. [Usage](#usage)
@@ -43,43 +43,43 @@ Each version can be run independently from its respective folder:
   - **Version Tracking**: Maintains the latest and previous versions of the source and backup directories.
   - **Restoration**: Allows restoration of directories to previous states.
 
-## MD5
+## SHA-256
 
-- **MD5 Check**: The system uses MD5 hashing to determine if the contents of files have changed. MD5 (Message Digest Algorithm 5) generates a 128-bit hash value that uniquely represents the contents of a file. If the MD5 hash of a file changes, it indicates that the file contents have been modified, prompting the synchronization process to update the backup.
-Additionally, to maintain the versioned-backup mode effectively, the system occasionally computes the MD5 hash of the entire directory. This ensures that even if changes occur across multiple files, the integrity and versioning of the entire directory are accurately tracked and managed.
+- **SHA-256 Check**: The system uses SHA-256 hashing to determine if the contents of files have changed. SHA-256 (Secure Hash Algorithm 256-bit) generates a 256-bit hash value that uniquely represents the contents of a file. If the SHA-256 hash of a file changes, it indicates that the file contents have been modified, prompting the synchronization process to update the backup.
+  Additionally, to maintain the versioned-backup mode effectively, the system occasionally computes the SHA-256 hash of the entire directory. This ensures that even if changes occur across multiple files, the integrity and versioning of the entire directory are accurately tracked and managed.
 
 - **One-Way Synchronization**: By itself, the One-Way synchronization is a straightforward process that syncs files from the source directory to the backup directory. It does not track historical versions of files.
 
 - **Running One-Way Program in Versioned Backup Mode**: The One-Way synchronization program can be run with versioned backup mode activated. This mode will create version directories and maintain different versions of the source and backup directories, as described in the Two-Way version.
 
-- **One-Way with Versioned Backup Mode**: When activated, the One-Way version will create a `__versions__` directory. For each synchronized directory (source and backup), it maintains two versions: `_0` (previous) and `_1` (latest). When synchronizing, if the incoming file's MD5 hash differs from `_1`, the current `_1` is copied to `_0`, and the incoming sync becomes the new `_1`. The program also calculates the MD5 hash of the entire directory by considering the checksums of all files and their relative paths. This combined approach ensures that both individual file changes and overall directory state are accurately tracked and versioned.
+- **One-Way with Versioned Backup Mode**: When activated, the One-Way version will create a `__versions__` directory. For each synchronized directory (source and backup), it maintains two versions: `_0` (previous) and `_1` (latest). When synchronizing, if the incoming file's SHA-256 hash differs from `_1`, the current `_1` is copied to `_0`, and the incoming sync becomes the new `_1`. The program also calculates the SHA-256 hash of the entire directory by considering the checksums of all files and their relative paths. This combined approach ensures that both individual file changes and the overall directory state are accurately tracked and versioned.
 
 ### File Checksum Calculation
 
-To calculate the MD5 hash of a file, the following function is used:
+To calculate the SHA-256 hash of a file, the following function is used:
 
 ```python
 import hashlib
 
 def file_checksum(file):
-    file_hash = hashlib.md5()
+    file_hash = hashlib.sha256()
     with open(file, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             file_hash.update(chunk)
     return file_hash.hexdigest()
 ```
-- **Explanation**: The `file_checksum` function calculates the MD5 hash of a file by reading it in chunks and updating the hash with each chunk. The resulting hash uniquely represents the file contents and is used to determine if the file has changed.
+- **Explanation**: The `file_checksum` function calculates the SHA-256 hash of a file by reading it in chunks and updating the hash with each chunk. The resulting hash uniquely represents the file contents and is used to determine if the file has changed.
 
 ### Directory Checksum Calculation
 
-To calculate the MD5 hash of an entire directory, the following function is used:
+To calculate the SHA-256 hash of an entire directory, the following function is used:
 
 ```python
 import os
 import hashlib
 
 def directory_checksum(directory):
-    hasher = hashlib.md5()
+    hasher = hashlib.sha256()
     for root, _, files in os.walk(directory):
         for file in sorted(files):
             file_path = os.path.join(root, file)
@@ -88,7 +88,7 @@ def directory_checksum(directory):
             hasher.update(file_checksum(file_path).encode())
     return hasher.hexdigest()
 ```
-- **Explanation**: The `directory_checksum` function calculates the MD5 hash of a directory by iterating over all files within the directory and updating the hash with both the file's checksum and its relative path. This is due to the limitation of the hashing algorithm, which does not have the capability to directly compute a checksum for an entire directory. This combined hash provides a unique representation of the directory's state and is used to ensure that changes across the entire directory are tracked accurately.
+- **Explanation**: The `directory_checksum` function computes the SHA-256 hash for the entire directory by hashing the relative file paths and their contents. This approach ensures that changes to both file contents and the directory structure are detected.
 
 ## Usage
 
